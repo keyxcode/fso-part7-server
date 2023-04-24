@@ -2,6 +2,7 @@
 
 const blogsRouter = require("express").Router();
 const Blog = require("../models/blog");
+const Comment = require("../models/comment");
 const { userExtractor } = require("../utils/middleware");
 
 blogsRouter.get("/", async (request, response) => {
@@ -71,6 +72,24 @@ blogsRouter.delete("/:id", userExtractor, async (request, response) => {
   await blog.remove();
 
   return response.status(204).end();
+});
+
+blogsRouter.get("/:id/comments", async (request, response) => {
+  const comments = await Comment.find({}).populate("blog");
+  return response.status(201).json(comments);
+});
+
+blogsRouter.post("/:id/comments", async (request, response) => {
+  const { content } = request.body;
+  const blog = await Blog.findById(request.params.id);
+
+  const comment = new Comment({
+    content,
+    blog,
+  });
+  const savedComment = await comment.save();
+
+  return response.status(201).json(savedComment);
 });
 
 module.exports = blogsRouter;
